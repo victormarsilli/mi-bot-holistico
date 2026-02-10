@@ -40,8 +40,8 @@ SISTEMA_MISTICO = (
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "✨ El cosmos te saluda. ✨\n\n"
-        "Soy tu conexión con la sabiduría universal procesada por Groq.\n"
+        "✨ El universo te saluda. ✨\n\n"
+        "Soy tu conexión con la sabiduría ancestral procesada por Groq.\n"
         "Hazme una pregunta sobre tu destino o pide un consejo energético."
     )
 
