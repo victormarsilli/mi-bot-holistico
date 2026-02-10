@@ -42,7 +42,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "✨ El universo te saluda. ✨\n\n"
         "Soy tu conexión con la sabiduría ancestral procesada por Groq.\n"
-        "Hazme una pregunta sobre tu destino o pide un consejo energético."
+        "Hazme una pregunta sobre tu destino o pide un consejo energético..tambien se cositas."
     )
 
 async def responder_con_groq(update: Update, context: ContextTypes.DEFAULT_TYPE):
