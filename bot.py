@@ -77,3 +77,18 @@ if __name__ == '__main__':
 
     print("🔮 Oráculo Groq iniciado y esperando señales del universo...")
     app.run_polling()
+    
+    
+    import http.server
+import socketserver
+import threading
+
+# Función para engañar a Render
+def start_server():
+    port = int(os.environ.get("PORT", 8080))
+    handler = http.server.SimpleHTTPRequestHandler
+    with socketserver.TCPServer(("", port), handler) as httpd:
+        httpd.serve_forever()
+
+# Lanzar el servidor en un hilo aparte antes de arrancar el bot
+threading.Thread(target=start_server, daemon=True).start()
