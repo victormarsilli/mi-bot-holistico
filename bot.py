@@ -1,188 +1,113 @@
-import logging
-from groq import Groq
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-
-
-
-# 1. Configuración de registros para ver qué pasa en la consola
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
 import os
 import logging
+import random
+import threading
+import http.server
+import socketserver
 from groq import Groq
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-
-# --- ESTO ES LO QUE PEGAS ARRIBA ---
-# El código buscará estas variables en el sistema operativo
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-
-# Validación (para que el bot te avise si faltan las llaves)
-if not TELEGRAM_TOKEN or not GROQ_API_KEY:
-    print("❌ ERROR: No se encontraron las variables de entorno.")
-    print("Asegúrate de configurarlas en el panel de control de tu hosting.")
-# ----------------------------------
-
-client = Groq(api_key=GROQ_API_KEY)
-
-# Instrucciones de personalidad
-SISTEMA_MISTICO = (
-    "Eres un guía holístico y espiritual experto en astrología y energías cósmicas. "
-    "Tus respuestas son místicas, sabias, pero breves y directas. "
-    "Siempre incluyes emojis como ✨, 🔮, 🪐 o 🌙. Responde siempre en español."
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import (
+    ApplicationBuilder, 
+    CommandHandler, 
+    MessageHandler, 
+    CallbackQueryHandler, 
+    filters, 
+    ContextTypes
 )
 
-# --- FUNCIONES DEL BOT ---
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "✨ El universo te saluda. ✨\n\n"
-        "Soy tu conexión con la sabiduría ancestral procesada por Groq.\n"
-        "Hazme una pregunta sobre tu destino o pide un consejo energético..tambien se cositas."
-    )
-
-async def responder_con_groq(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Efecto de "Escribiendo..." en Telegram
-    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
-    
-    try:
-        # Llamada a la API de Groq
-        chat_completion = client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": SISTEMA_MISTICO},
-                {"role": "user", "content": update.message.text}
-            ],
-            model="llama-3.3-70b-versatile", # El modelo más potente disponible en Groq
-            temperature=0.7, # Un toque de creatividad mística
-        )
-        
-        respuesta = chat_completion.choices[0].message.content
-        await update.message.reply_text(respuesta)
-
-    except Exception as e:
-        print(f"Error en Groq: {e}")
-        await update.message.reply_text("✨ Las interferencias astrales son fuertes. Reintenta en un momento.")
-
-# --- INICIO ---
-
-if __name__ == '__main__':
-    app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
-    
-    app.add_handler(CommandHandler('start', start))
-    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), responder_con_groq))
-
-    print("🔮 Oráculo Groq iniciado y esperando señales del universo...")
-    app.run_polling()
-    
-    
-    import http.server
-import socketserver
-import threading
-
-# Función para engañar a Render
+# 1. SERVIDOR WEB MINIMALISTA (Para que Render Free no se apague)
 def start_server():
     port = int(os.environ.get("PORT", 8080))
     handler = http.server.SimpleHTTPRequestHandler
     with socketserver.TCPServer(("", port), handler) as httpd:
+        print(f"Servidor de mantenimiento en puerto {port}")
         httpd.serve_forever()
 
-# Lanzar el servidor en un hilo aparte antes de arrancar el bot
 threading.Thread(target=start_server, daemon=True).start()
-import logging
-from groq import Groq
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
+# 2. CONFIGURACIÓN DE LOGS Y CLIENTES
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-
-# 1. Configuración de registros para ver qué pasa en la consola
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
-import os
-import logging
-from groq import Groq
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-
-# --- ESTO ES LO QUE PEGAS ARRIBA ---
-# El código buscará estas variables en el sistema operativo
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-# Validación (para que el bot te avise si faltan las llaves)
 if not TELEGRAM_TOKEN or not GROQ_API_KEY:
-    print("❌ ERROR: No se encontraron las variables de entorno.")
-    print("Asegúrate de configurarlas en el panel de control de tu hosting.")
-# ----------------------------------
+    raise ValueError("Faltan las variables de entorno TELEGRAM_TOKEN o GROQ_API_KEY")
 
 client = Groq(api_key=GROQ_API_KEY)
 
-# Instrucciones de personalidad
 SISTEMA_MISTICO = (
-    "Eres un guía holístico y espiritual experto en astrología y energías cósmicas. "
-    "Tus respuestas son místicas, sabias, pero breves y directas. "
-    "Siempre incluyes emojis como ✨, 🔮, 🪐 o 🌙. Responde siempre en español."
+    "Eres un guía místico y experto en energías cósmicas. "
+    "Respondes de forma breve, sabia y con muchos emojis ✨🔮🌙."
 )
 
 # --- FUNCIONES DEL BOT ---
 
+# Comando /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "✨ El cosmos te saluda. ✨\n\n"
-        "Soy tu conexión con la sabiduría universal procesada por Groq.\n"
-        "Hazme una pregunta sobre tu destino o pide un consejo energético."
+        "✨ Bienvido al Oráculo Digital. ✨\n\n"
+        "Puedes hablarme normalmente o usar /jugar para ver la interfaz mística."
     )
 
-async def responder_con_groq(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Efecto de "Escribiendo..." en Telegram
-    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+# Interfaz Gráfica (Botones)
+async def menu_juego(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [
+            InlineKeyboardButton("🔮 Tarot", callback_data='tarot'),
+            InlineKeyboardButton("✨ Horóscopo", callback_data='horoscopo')
+        ],
+        [
+            InlineKeyboardButton("🎲 Número de la Suerte", callback_data='suerte'),
+            InlineKeyboardButton("🪐 Energía Hoy", callback_data='energia')
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text("✨ Selecciona una opción del plano astral:", reply_markup=reply_markup)
+
+# Manejador de clics en botones
+async def manejar_botones(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    
+    opcion = query.data
+    prompt = f"El usuario eligió {opcion}. Dame una predicción o consejo místico muy breve."
     
     try:
-        # Llamada a la API de Groq
-        chat_completion = client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": SISTEMA_MISTICO},
-                {"role": "user", "content": update.message.text}
-            ],
-            model="llama-3.3-70b-versatile", # El modelo más potente disponible en Groq
-            temperature=0.7, # Un toque de creatividad mística
+        completion = client.chat.completions.create(
+            messages=[{"role": "system", "content": SISTEMA_MISTICO}, {"role": "user", "content": prompt}],
+            model="llama-3.3-70b-versatile",
         )
-        
-        respuesta = chat_completion.choices[0].message.content
-        await update.message.reply_text(respuesta)
-
+        await query.edit_message_text(text=f"✨ {completion.choices[0].message.content}")
     except Exception as e:
-        print(f"Error en Groq: {e}")
-        await update.message.reply_text("✨ Las interferencias astrales son fuertes. Reintenta en un momento.")
+        await query.edit_message_text(text="✨ Las estrellas están nubladas... intenta luego.")
 
-# --- INICIO ---
+# Chat normal con IA
+async def hablar_con_ia(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
+    try:
+        completion = client.chat.completions.create(
+            messages=[{"role": "system", "content": SISTEMA_MISTICO}, {"role": "user", "content": update.message.text}],
+            model="llama-3.3-70b-versatile",
+        )
+        await update.message.reply_text(completion.choices[0].message.content)
+    except Exception as e:
+        await update.message.reply_text("✨ Hubo una interferencia cósmica.")
+
+# --- INICIO DEL BOT ---
 
 if __name__ == '__main__':
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     
+    # Comandos
     app.add_handler(CommandHandler('start', start))
-    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), responder_con_groq))
+    app.add_handler(CommandHandler('jugar', menu_juego))
+    
+    # Manejador de botones
+    app.add_handler(CallbackQueryHandler(manejar_botones))
+    
+    # Manejador de texto (IA)
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), hablar_con_ia))
 
-    print("🔮 Oráculo Groq iniciado y esperando señales del universo...")
+    print("🔮 Bot 2026 listo y conectado...")
     app.run_polling()
-    
-    
-    import http.server
-import socketserver
-import threading
-
-# Función para engañar a Render
-def start_server():
-    port = int(os.environ.get("PORT", 8080))
-    handler = http.server.SimpleHTTPRequestHandler
-    with socketserver.TCPServer(("", port), handler) as httpd:
-        httpd.serve_forever()
-
-# Lanzar el servidor en un hilo aparte antes de arrancar el bot
-threading.Thread(target=start_server, daemon=True).start()
