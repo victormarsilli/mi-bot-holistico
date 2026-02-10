@@ -107,14 +107,20 @@ async def hablar_con_ia(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # --- INICIO ---
 
+
+    
 if __name__ == '__main__':
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
     
+    # 1. Comandos primero
     app.add_handler(CommandHandler('start', start))
     app.add_handler(CommandHandler('ayuda', ayuda))
     app.add_handler(CommandHandler('jugar', menu_juego))
+    
+    # 2. Manejador de botones (¡ESTE ES EL QUE HACE QUE FUNCIONE EL CLIC!)
     app.add_handler(CallbackQueryHandler(manejar_botones))
+    
+    # 3. Chat normal al final
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), hablar_con_ia))
 
-    print("🔮 Bot iniciado y servidor web corriendo...")
     app.run_polling()
